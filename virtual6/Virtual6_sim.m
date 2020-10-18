@@ -36,7 +36,6 @@ robot_V6=SerialLink( L,'name','V6');
 % theta=[  0            0            0         2.41       0.8579      -1.1062       863.26      0.60959      -1.4757];
 % theta=[0 0 0 pi*(2*rand(1)-1) pi*(2*rand(1)-1) pi*(2*rand(1)-1) 1000*rand(1) pi*(2*rand(1)-1) pi*(2*rand(1)-1)];
 theta=[0  0  0  -30.937      -89.429       -24.31       5729.6      -87.366       71.545]/180*pi;  % x4jie
-
 theta_deg=theta*180/pi
 
 T=forward_kine49(theta);
@@ -207,17 +206,17 @@ function theta = In_pi(theta)
 end
 
 %% kinetic_function
-function T = forward_kine456(theta) % virtual六轴专用函数，正运动位姿获取
-    d=[0 0 0 0 0 0 0 0 0];     %syms  a8 a9 d7;
-%     a8=50;a9=50; %d7=0;
-    a=[0 0 0 0 0 0 0 50 50]; 
-    alpha=[0 0 0 pi/2 -pi/2 0 pi/2 -pi/2 0];
-    T4=DH_forward(theta(4),d(4),a(4),alpha(4));
-    T5=DH_forward(theta(5),d(5),a(5),alpha(5));
-    T6=DH_forward(theta(6),d(6),a(6),alpha(6));
-    T7=DH_forward(0,theta(7),a(7),alpha(7)); 
-    T=T4*T5*T6*T7;
-end
+% function T = forward_kine456(theta) % virtual六轴专用函数，正运动位姿获取
+%     d=[0 0 0 0 0 0 0 0 0];     %syms  a8 a9 d7;
+% %     a8=50;a9=50; %d7=0;
+%     a=[0 0 0 0 0 0 0 50 50]; 
+%     alpha=[0 0 0 pi/2 -pi/2 0 pi/2 -pi/2 0];
+%     T4=DH_forward(theta(4),d(4),a(4),alpha(4));
+%     T5=DH_forward(theta(5),d(5),a(5),alpha(5));
+%     T6=DH_forward(theta(6),d(6),a(6),alpha(6));
+%     T7=DH_forward(0,theta(7),a(7),alpha(7)); 
+%     T=T4*T5*T6*T7;
+% end
 
 function T = forward_kine49(theta) % virtual六轴专用函数，正运动位姿获取
     %syms  a8 a9 d7;
