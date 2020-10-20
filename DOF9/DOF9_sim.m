@@ -32,8 +32,8 @@ robot_dof9=SerialLink(L,'name','DOF9');%
 % T=forward_kine9(theta); simplify(T)
 % Tmain=equation(theta)
 
-% theta_rand=[2*rand(1)-1 2*rand(1)-1 2*rand(1)-1 pi*(2*rand(1)-1) pi*(2*rand(1)-1)/2 pi*(2*rand(1)-1) 500*(1+rand(1)) pi*(2*rand(1)-1) pi*(2*rand(1)-1)]
-theta_rand=[-0.93923     -0.58306    -0.090068       -2.342      -1.5436       1.4268       677.06       1.7621       -0.398]
+theta_rand=[2*rand(1)-1 2*rand(1)-1 2*rand(1)-1 pi*(2*rand(1)-1) pi*(2*rand(1)-1)/2 pi*(2*rand(1)-1) 500*(1+rand(1)) pi*(2*rand(1)-1) pi*(2*rand(1)-1)]
+% theta_rand=[-0.93923     -0.58306    -0.090068       -2.342      -1.5436       1.4268       677.06       1.7621       -0.398]
 
 T_RCM=transl(-600+theta_rand(1),theta_rand(2),100+theta_rand(3)) %指定RCM远心点位置 %限定范围的，随机RCM远心点
 T_AV=trotx(pi/2); %DOF9到Virtual6之间的基坐标系变换；
@@ -41,11 +41,16 @@ T_49=forward_kine49(theta_rand); %T_49==T_V6
 T_end=T_RCM*T_AV*T_49  %获取DOF9末端任意位姿
 % T_tcp %工具中心点 的英文名称为“Tool Central Point”，简写为“TCP”
 
-%% 求逆
+%% 求逆3+6
 T=invtrot(T_AV)*invtrans(T_RCM)*T_end;  %T49
-thv=ikine_Virtual6(T); %theta_virtual
+thv=ikine_Virtual3(T) %theta_virtual
 
-T1=T_end*inverse_kine987(thv(1,1:9));  %T16
+% %% 求逆6+6
+% T=invtrot(T_AV)*invtrans(T_RCM)*T_end;  %T49
+% thv=ikine_Virtual6(T) %theta_virtual
+ 
+% T=T_end*inv(T9)*inv(T8)*inv(T7);
+T1=T_end*inverse_kine987(thv(1,1:9));   %T16
 T2=T_end*inverse_kine987(thv(2,1:9)); %从virtual分别获得两组，分别对应actual4组，实际上有4*8组，这里做了条件筛选；
 tha1=ikine_Actual6(T1);%theta_actual
 tha2=ikine_Actual6(T2);
@@ -59,6 +64,7 @@ tha2=ikine_Actual6(T2);
     theta_deg(1:8,1:6)=theta(:,1:6)*180/pi;
     theta_deg(1:8,7)=theta(:,7);
     theta_deg(1:8,8:9)=theta(:,8:9)*180/pi;
+    theta_deg
 %     a = theta_deg;
 %     n = 3; %保留位数
 %     b = a*10^n;% 先化成整数，
@@ -86,6 +92,52 @@ end
 
 % robot_dof9.display();% figure('NumberTitle', 'off', 'Name', 'DOF9');
 % robot_dof9.teach(theta(8,1:9)); 
+
+%% ikine_Virtual3(T)
+function th=ikine_Virtual3(T)
+    a8=50;a9=50;
+    nx=T(1,1);ox=T(1,2);ax=T(1,3);px=T(1,4);
+    ny=T(2,1);oy=T(2,2);ay=T(2,3);py=T(2,4);
+    nz=T(3,1);oz=T(3,2);az=T(3,3);pz=T(3,4);
+    %th9
+    Px=px-a9*nx;
+    Py=py-a9*ny;
+    Pz=pz-a9*nz;
+    Pm=(Pz*ay-Py*az)*nx+(Px*az-Pz*ax)*ny+(Py*ax-Px*ay)*nz;    Pm=N_zero(Pm);
+    Pn=(Pz*ay-Py*az)*ox+(Px*az-Pz*ax)*oy+(Py*ax-Px*ay)*oz;    Pn=N_zero(Pn);
+    th9(1)=atan(Pm/Pn);
+    th9(2)=th9(1)+pi;
+	%th8
+    Rx=nx*cos(th9)-ox*sin(th9); 
+    Ry=ny*cos(th9)-oy*sin(th9); 
+    Rz=nz*cos(th9)-oz*sin(th9);  
+%     m81=ax*(Pz-a8*Rz)-az*(Px-a8*Rx);
+%     n81=Rz.*(Px-a8*Rx)-Rx.*(Pz-a8*Rz);
+%     m81=N_zero(m81);
+    m82=ay*(Pz-a8*Rz)-az*(Py-a8*Ry);
+    n82=Rz.*(Py-a8*Ry)-Ry.*(Pz-a8*Rz);
+    m82=N_zero(m82);
+    th8(1:2)=atan(m82./n82);
+    th8(3:4)=th8(1:2)+pi;
+    th9(3:4)=th9(1:2);
+    th8=In_pi(th8);
+    %d7
+    Mz=az*cos(th8) + sin(th8).*(nz*cos(th9)-oz*sin(th9));
+    Nz=pz-a9*nz-a8*(nz*cos(th9)-oz*sin(th9));
+    Mz=N_zero(Mz);
+    Nz=N_zero(Nz);
+    d7(1:4)=Nz./Mz;
+    
+    i=1; %取d7大于0的解
+    for j=1:4
+        if d7(j)>0
+            th(i,9)=In_pi(th9(j));
+            th(i,8)=In_pi(th8(j));
+            th(i,7)=d7(j);
+            i=i+1;
+        end
+    end
+end
 
 
 %% ikine_Virtual6(T)
@@ -275,9 +327,9 @@ end
 
 
 function T = inverse_kine987(theta)
-d=[90 0 0 90 90 90 0 0 0]; 
-a=[0 -420 -400 0 0 0 0 50 50];
-alpha=[pi/2 0 0 pi/2 -pi/2 0 pi/2 -pi/2 0];
+    d=[90 0 0 90 90 90 0 0 0]; 
+    a=[0 -420 -400 0 0 0 0 50 50];
+    alpha=[pi/2 0 0 pi/2 -pi/2 0 pi/2 -pi/2 0];
     T9i=DH_inverse(theta(9),d(9),a(9),alpha(9));
     T8i=DH_inverse(theta(8),d(8),a(8),alpha(8));
     T7i=DH_inverse(0,theta(7),a(7),alpha(7));
