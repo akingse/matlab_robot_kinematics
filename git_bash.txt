@@ -16,3 +16,9 @@ remote: Resolving deltas: 100% (1/1), completed with 1 local object.
 To https://github.com/akingse/matlab_robot_kinematics.git
    a0b4d5a..4ca2f2d  master -> master
 
+----------------------------------------
+使用GitHub desktop
+
+Summary ->(version)
+Commit to master
+Repositore->Push
