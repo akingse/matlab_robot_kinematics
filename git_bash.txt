@@ -1,7 +1,9 @@
 使用git bash同步
 $ git add git_bash.txt
+git add .
 
 $ git commit -m "gittest"
+git commit -m "210625"
 [master 4ca2f2d] gitt
  1 file changed, 1 insertion(+)
 
