@@ -22,6 +22,33 @@ x=Cartesian4(a,b,c,d,e)
 
 
 
+%% 数值法
+%{ 设定步长搜索
+a = 10*(2*rand(1)-1);
+b = 10*(2*rand(1)-1);
+c = 10*(2*rand(1)-1);
+d = 10*(2*rand(1)-1);
+e = 10*(2*rand(1)-1);
+A=[a b c d e];
+theta = -pi:0.001:pi;
+x=[];% syms x
+j=1;
+for i = 1:length(theta)
+    y(i) = a*cos(theta(i))^2+b*sin(theta(i))^2+c*cos(theta(i))*sin(theta(i))+d*cos(theta(i))+e*sin(theta(i));
+    w(i) = 0;
+
+    if abs(y(i))< 0.02 %1E-1 %绝对值，科学计数
+        x(j)=i; %数组连续赋值
+        j=j+1;
+    end
+end
+% plot(theta,y);
+% hold on;
+% plot(theta,w);
+% an=x/length(theta)
+%}
+
+
 %% image
 function y = fun_image3(x,a,b,c,d)
 % f = @(x) x^2;  f(10);  %简单定义函数
@@ -309,28 +336,3 @@ roots([1 0 0 -8]) %转换成方程形式，求出所有根的列表
 sign(-8)*abs(-8^(1/3))
 %}
 
-%% 数值法
-%{
-a = 10*(2*rand(1)-1);
-b = 10*(2*rand(1)-1);
-c = 10*(2*rand(1)-1);
-d = 10*(2*rand(1)-1);
-e = 10*(2*rand(1)-1);
-A=[a b c d e];
-theta = -pi:0.001:pi;
-x=[];% syms x
-j=1;
-for i = 1:length(theta)
-    y(i) = a*cos(theta(i))^2+b*sin(theta(i))^2+c*cos(theta(i))*sin(theta(i))+d*cos(theta(i))+e*sin(theta(i));
-    w(i) = 0;
-
-    if abs(y(i))< 0.02 %1E-1 %绝对值，科学计数
-        x(j)=i; %数组连续赋值
-        j=j+1;
-    end
-end
-% plot(theta,y);
-% hold on;
-% plot(theta,w);
-% an=x/length(theta)
-%}

@@ -1,6 +1,8 @@
-clc;clear all;
-format short g;
-%% main
+%% initialize
+clc; close all; clear all;
+format shortg; format compact;
+
+% main
 theta_deg=[10 20 30 40 50 60]
 % theta_deg=[90 90 90 90 90 90]
 % theta_deg=[180*(rand*2-1) 180*(rand*2-1) 180*(rand*2-1) 180*(rand*2-1) 180*(rand*2-1) 180*(rand*2-1)]
@@ -34,12 +36,12 @@ function theta_deg=ikine_GP7(T)
     m23=-a1+d6*(ax*cos(th1)+ay*sin(th1))+px*cos(th1)+py*sin(th1); 
     n23=-d6*az-(pz-d1);
     k2=(m23.^2+n23^2+a2^2-a3^2-d4^2)./(2*a2*sqrt(m23.^2+n23.^2));
-    k2=K_one(k2); 
+%     k2=K_one(k2); ÎÞÐèÅÐ¶Ï
     th2(1,1:2)=atan2(k2,sqrt(1-k2.^2))-atan2(m23,n23); 
     th2(2,1:2)=atan2(k2,-sqrt(1-k2.^2))-atan2(m23,n23);
     % th3
     k3=(m23.^2+n23^2-a2^2-a3^2-d4^2)/(2*a2*sqrt(a3^2+d4^2));
-    k3=K_one(k3); 
+%     k3=K_one(k3); 
     th3(1,1:2)=atan2(a3,d4)-atan2(k3,-sqrt(1-k3.^2));
     th3(2,1:2)=atan2(a3,d4)-atan2(k3,sqrt(1-k3.^2));
     %----------------------------------------------------------------------
@@ -113,17 +115,6 @@ function mn = N_zero(mn)
         end
     end
 end   
-% 
-function k = K_one(k)
-    S=size(k);
-    for i=1:S(1)
-        for j=1:S(2)
-            if abs(k(i,j))>1
-                k(i,j)=NaN;
-            end
-        end
-    end
-end
 % 
 function theta = In_pi(theta)
     while (abs(theta)>pi)

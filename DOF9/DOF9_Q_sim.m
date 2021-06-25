@@ -1,33 +1,29 @@
 %% initialize
 clc; close all; clear all;
 format shortg; format compact;
+%{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Readme
+% Q(Quartic equation with one variable)意思是一元四次方程，此m脚本为一元四次方程解法；
+% 这是第一次关于将两个六轴函数合在一起的尝试，只是这个版本的Virtual6函数有点问题，
+% 应该是中间手算部分出了(0)*(equ)，导致出现了一元四次方程，一开始没有注意，实际上也能算出来但是走了远路，
+% 中间化简部分，可以用syms符号运算，使用 collet() simplify() 函数。% 所以啊，你永远可以相信计算机！计算机是永远嘀神；
+% 公式太多，文字太少，计算太复杂，每次当我回过头来想要重新运用这些代码的时候，都要花很多时间来审视这些代码；
+带有Q一元四次方程的脚本版本，已经没有什么参考价值了；
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%}
+
 
 %% main
-% run('Virtual6.m');
-% 运行此脚本外的函数文件，函数名（function y=mylfg(x)）必须与文件名（mylfg.m）一致
-% Virtual6;
-% 这是第一次关于将两个六轴函数合在一起的尝试，只是这个版本的Virtual6函数有点问题，
-% 应该是中间手算部分出了bug，导致出现了一元四次方程，虽然也能解出来，但是走了远路，
-% 中间化简部分，可以用syms符号运算，使用 collet() simplify() 函数
-% 所以啊，你永远可以相信计算机，而不能相信自己，也别相信别人，
 
 syms x0 y0 z0;  % 设定远心点
-x0=-300;  y0=-300  ;z0=300;
+x0=-300;  
+y0=-300;
+z0=300;
 % x0=-820;  y0=-180  ;z0=0;
 Prcm=[x0 y0 z0];
 Trcm=transl(x0,y0,z0)*trotx(pi/2);  % T0→Tv
 Tircm=invtrot(trotx(pi/2))*invtrans(transl(x0,y0,z0));
-
-
-% th4=pi*(2*rand(1)-1);
-% th5=pi/2*(2*rand(1)-1);
-% th6=pi*(2*rand(1)-1);  d7=100;
-% th8=pi*(2*rand(1)-1);
-% th9=pi*(2*rand(1)-1);
-% theta=[0 0 0 th4 th5 th6 d7 th8 th9];
-% Tv=forward_kine49(theta);
-% T=Trcm*Tv  %Tv=T4*T5*T6*T7*T8*T9; 
-
 
 T=rpy2tr(1,1,1);T(1,4)=-400;T(2,4)=-400;T(3,4)=-400;
 % T %基于T0的final位姿
@@ -320,7 +316,8 @@ function theta = In_pi(theta)
         end
     end
 end
-function k = K_one(k) %之前多虑了，解arccos时，理论证明总是有 |k|<=1
+function k = K_one(k) %之前多虑了，解arccos()时，大部分情况下理论证明有 |k|<=1
+% 否则，应该是超出了模型的工作空间；
     S=size(k);
     for i=1:S(1)
         for j=1:S(2)

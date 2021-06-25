@@ -1,0 +1,373 @@
+	//创建手姿态 临时变量targetHandAxisTemp
+	float targetHandAxisTemp[3][3];
+	float targetHandAxisTemp_[3][3];
+
+	if(1)
+	{
+		vector3d      a;
+		vector3d      Axis;
+		for (int i=0;i<3;i++)
+		{
+			a.x=targetHandAxis[i][0];
+			a.y=targetHandAxis[i][1];
+			a.z=targetHandAxis[i][2];
+			int jj=3;//大臂指向
+			Axis.x=0;
+			Axis.y=1;
+			Axis.z=0;
+			a=Emu.q4Emu.Rotate(a,Axis, 0.005);//PI*0.25
+			Axis.x=1;
+			Axis.y=0;
+			Axis.z=0;
+			a=Emu.q4Emu.Rotate(a,Axis, 0.005);//PI*0.25
+			targetHandAxis[i][0]=a.x;
+			targetHandAxis[i][1]=a.y;
+			targetHandAxis[i][2]=a.z;
+			targetHandAxisTemp[i][0]=a.x;
+			targetHandAxisTemp[i][1]=a.y;
+			targetHandAxisTemp[i][2]=a.z;
+			targetHandAxisTemp_[i][0]=a.x;
+			targetHandAxisTemp_[i][1]=a.y;
+			targetHandAxisTemp_[i][2]=a.z;
+		}
+	}
+	if(0)
+	{	for (int i=0;i<3;i++)
+		for (int j=0;j<3;j++)
+		{	targetHandAxisTemp[i][j]=targetHandAxis[i][j];
+			targetHandAxisTemp_[i][j]=targetHandAxis[i][j];
+		}
+	}
+
+	//3x3旋转矩阵
+	float rrr[3][3];//
+	float rrr_[3][3]={0};//
+
+
+	int jj=0;
+	//用爪末端位置 和爪姿态 解析腕位置
+	//爪X轴 轴向量
+	jj=8;//手指偏移量
+	float zhuaLongs=armadv[jj].compAxis[3].axisOffset.x;
+	jj=7;//腕旋转偏移量
+		  zhuaLongs+=armadv[jj].compAxis[3].axisOffset.x;
+	//手指长度
+		  zhuaLongs+=0.20;
+	float zhuaYx=targetHandAxisTemp_[0][0]*zhuaLongs;
+	float zhuaYy=targetHandAxisTemp_[0][1]*zhuaLongs;
+	float zhuaYz=targetHandAxisTemp_[0][2]*zhuaLongs;
+
+	//创建腕俯仰 位置 临时变量 targetx_ targety_ targetz_
+	float targetx_=targetx-zhuaYx;//- armadv[1].compAxis[3].axisOffset.x;
+	float targety_=targety-zhuaYy;//- armadv[1].compAxis[3].axisOffset.y;
+	float targetz_=targetz-zhuaYz;//- armadv[1].compAxis[3].axisOffset.z;
+
+	//float targetx_=targetx-0;//- armadv[1].compAxis[3].axisOffset.x;
+	//float targety_=targety-0;//- armadv[1].compAxis[3].axisOffset.y;
+	//float targetz_=targetz-0;//- armadv[1].compAxis[3].axisOffset.z;
+
+	float base_roateX=0;
+	float base_roateY=0;//PI*0.5;//
+	float base_roateZ=0;
+	//此处方法  先把基座转动到需要方向  得到肩基座姿态旋转矩阵A 把目标向量 和手姿态旋转矩阵 从世界坐标 转到肩基座矩阵A的坐标系下
+	//再用转好的坐标系 做运动反解(基座不动)
+	//运动反解完 用完整的 init(1) 和 包含基座转动的 move() 做图像渲染
+	if (1)//基座旋转变化
+	{
+		armadv_init(2);//mode==2 是简化初始化
+	//	Emu.moveLite(&armadv[9],0,-finger1_angle,0);//指1
+	//	Emu.moveLite(&armadv[8],0,finger1_angle,0);//指1
+	//	Emu.moveLite(&armadv[7],0,hand3_angle,0);//腕3
+	//	Emu.moveLite(&armadv[6],0,hand2_angle,0);//腕2
+	//	Emu.moveLite(&armadv[5],0,hand1_angle,0);//腕1
+	//	Emu.moveLite(&armadv[4],0,zhou1_angle,0);//肘
+	//	Emu.moveLite(&armadv[3],0,jian3_angle,0);//肩3
+	//	Emu.moveLite(&armadv[2],0,jian2_angle,0);//肩2
+	//	Emu.moveLite(&armadv[1],0,jian1_angle,0);//肩1
+		Emu.moveLite(&armadv[0],0,base_roateZ,0);//z
+		Emu.moveLite(&armadv[0],1,base_roateY,0);//y
+		Emu.moveLite(&armadv[0],2,base_roateX,0);//x
+		int jj=0;//底盘末端 肩方位根部坐标系
+
+		//转移 手姿态坐标系
+		AxisOrientation2floatMatrix3_3(&(armadv[jj].compAxis[3]),&rrr[0][0]);
+		Matrix3X3(&targetHandAxisTemp[0][0],&rrr[0][0],&rrr_[0][0]);
+		for (int i=0;i<3;i++)
+		for (int j=0;j<3;j++)
+		{	targetHandAxisTemp[i][j]=rrr_[i][j];
+		}
+		float v3d[3];
+		float v3d_[3];
+		//转移 手指位置坐标系
+		v3d[0]=targetx_;
+		v3d[1]=targety_;
+		v3d[2]=targetz_;
+		Matrix3X1_3X3(v3d,&rrr[0][0],v3d_);
+		targetx_=v3d_[0];
+		targety_=v3d_[1];
+		targetz_=v3d_[2];
+	}
+
+
+
+	float radius =sqrt(targetx_*targetx_ + targety_*targety_ + targetz_*targetz_);
+
+	float low_arm=0.8;
+	float up_arm=0.75;
+	if (radius>low_arm+up_arm-0.15)
+	{
+		float zoom=(low_arm+up_arm-0.15)/radius;
+		targetx_=targetx_*zoom;
+		targety_=targety_*zoom;
+		targetz_=targetz_*zoom;
+		radius =sqrt(targetx_*targetx_ + targety_*targety_ + targetz_*targetz_);
+	//	targetx=targetx_+zhuaYx;
+	//	targety=targety_+zhuaYy;
+	//	targetz=targetz_+zhuaYz;
+	}
+
+	//肩方位
+    jian1_angle=atan2(targety_,targetx_);//
+
+	//肩俯仰1
+	float radius2 = norm2(targetx_ ,  targety_);
+    float inangle2=-atan2(targetz_ ,  radius2);
+	//double radius = norm2(targetVZ ,  targetVX);
+
+	//肩俯仰2
+    float inangle3=cosine_theorem(up_arm,radius,low_arm);
+	
+	jian2_angle=inangle2-inangle3;
+
+	//肘俯仰
+	float inangle4=PI-cosine_theorem(up_arm,low_arm,radius);
+	zhou1_angle = inangle4;
+
+	armadv_init(2);//mode==2 是简化初始化
+	Emu.moveLite(&armadv[2],0,jian2_angle,0);//肩2
+	Emu.moveLite(&armadv[1],0,jian1_angle,0);//肩1
+	Emu.moveLite(&armadv[0],0,0,0);//z
+
+	if (1)
+	{
+		jian_angle+=0.01;
+		//定义肩到腕基座的 指向轴
+	//	float jian_high=0.5;//肩旋转关节的高度
+		vector3d      jian_wan_Axis;
+		jian_wan_Axis.x=targetx_;
+		jian_wan_Axis.y=targety_;
+		jian_wan_Axis.z=targetz_;//-jian_high;
+		vector3d      jian_Axis;
+		int jj=3;//大臂指向
+		jian_Axis.x=armadv[jj].compAxis[3].axisOrientation_C.x;
+		jian_Axis.y=armadv[jj].compAxis[3].axisOrientation_C.y;
+		jian_Axis.z=armadv[jj].compAxis[3].axisOrientation_C.z;
+		jian_Axis=Emu.q4Emu.Rotate(jian_Axis,jian_wan_Axis,jian_angle );
+
+		//肩方位
+		jian1_angle  = atan2(jian_Axis.y,jian_Axis.x);//atan2(jian_Axis.y,jian_Axis.x);//
+		//肩俯仰1
+		float radius = norm2(jian_Axis.x ,  jian_Axis.y);
+		jian2_angle  =-atan2(jian_Axis.z ,  radius);
+		jian3_angle  =0;// jian_angle;
+
+		armadv_init(2);//mode==2 是简化初始化
+		Emu.moveLite(&armadv[3],0,jian3_angle,0);//肩3
+		Emu.moveLite(&armadv[2],0,jian2_angle,0);//肩2
+		Emu.moveLite(&armadv[1],0,jian1_angle,0);//肩1
+
+
+
+		jj=3;//大臂指向
+		float v3d[3];
+		float v3d_[3];
+		v3d[0]=jian_wan_Axis.x;
+		v3d[1]=jian_wan_Axis.y;
+		v3d[2]=jian_wan_Axis.z;
+		AxisOrientation2floatMatrix3_3(&(armadv[jj].compAxis[3]),&rrr[0][0]);
+		Matrix3X1_3X3(v3d,&rrr[0][0],v3d_);
+		//肩旋转
+		jian3_angle  =-atan2(v3d_[1] , v3d_[2] )+PI;// jian_angle;
+
+		armadv_init(2);//mode==2 是简化初始化
+		Emu.moveLite(&armadv[4],0,zhou1_angle,0);//肘
+		Emu.moveLite(&armadv[3],0,jian3_angle,0);//肩3
+		Emu.moveLite(&armadv[2],0,jian2_angle,0);//肩2
+		Emu.moveLite(&armadv[1],0,jian1_angle,0);//肩1
+	}
+
+
+	//通过小臂姿态解算 肩肘面旋转角
+	if(1)
+	{
+		vector3d      jian_wan_Axis(targetx_,targety_,targetz_);
+		float         jian_wan_Axis_[3]={targetx_,targety_,targetz_};
+		vector3d      jian_wan_AxisX(1,0,0);
+		vector3d      jian_wan_AxisY(0,1,0);
+		vector3d      jian_wan_AxisZ(0,0,1);
+
+		float jian_yaw  =atan2(jian_wan_Axis.y,jian_wan_Axis.x);
+		float radius    =norm2(jian_wan_Axis.x,jian_wan_Axis.y);
+		float jian_pitch=atan2(jian_wan_Axis.z,radius);
+		//肩俯仰
+		jian_wan_AxisX=Emu.q4Emu.Rotate(jian_wan_AxisX,jian_wan_AxisZ,jian_yaw );
+		jian_wan_AxisY=Emu.q4Emu.Rotate(jian_wan_AxisY,jian_wan_AxisZ,jian_yaw );
+		jian_wan_AxisX=Emu.q4Emu.Rotate(jian_wan_AxisX,jian_wan_AxisY,jian_pitch );
+		jian_wan_AxisZ=Emu.q4Emu.Rotate(jian_wan_AxisZ,jian_wan_AxisY,jian_pitch );
+		float jian_wan_RMatrix[3][3]={{jian_wan_AxisX.x,jian_wan_AxisX.y,jian_wan_AxisX.z}
+									 ,{jian_wan_AxisY.x,jian_wan_AxisY.y,jian_wan_AxisY.z}
+									 ,{jian_wan_AxisZ.x,jian_wan_AxisZ.y,jian_wan_AxisZ.z}};
+
+		jj=4;//
+		AxisOrientation2floatMatrix3_3(&(armadv[jj].compAxis[3]),&rrr[0][0]);
+		Matrix3X3(&rrr[0][0],&jian_wan_RMatrix[0][0],&rrr_[0][0]);//把小臂坐标系 转到 肩腕坐标系下
+
+		if(1)
+		{	for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+			{	targetHandAxis_[i][j]=rrr_[i][j];
+			}
+		}
+
+		float y=rrr_[0][1];
+		float z=rrr_[0][2];
+		float angle =atan2(y,-z);
+		angle=angle/PI*180;
+	}
+		jian_angle=jian_angle;
+		float tjian_angle=angle_add_transferPI(jian_angle,0)/PI*180;
+
+
+
+
+	jj=4;//小臂末端 腕根部坐标系
+	AxisOrientation2floatMatrix3_3(&(armadv[jj].compAxis[3]),&rrr[0][0]);
+
+	//平移向量
+	float ttt[3];//
+	AxisOffset2floatMatrix1_3(&armadv[jj].compAxis[3],&ttt[0]);
+
+
+	Matrix3X3(&targetHandAxisTemp[0][0],&rrr[0][0],&rrr_[0][0]);//旋转矩阵的逆 是其转置  将世界坐标系 手姿态 转到手腕坐标系
+	int y,x,n;
+	for (y=0;y<3;y++)
+	{	for (x=0;x<3;x++)
+		{		targetHandAxisTemp_[y][x]=rrr_[y][x];
+		}
+	}
+
+	
+	//腕方位
+	float wanXx=targetHandAxisTemp_[0][0];
+	float wanXy=targetHandAxisTemp_[0][1];
+	float wanXz=targetHandAxisTemp_[0][2];
+
+	if (0)
+	{	//测试Matrix3X3()的逆运算 将手部坐标系转回 地面坐标系
+		Matrix3X3_(&targetHandAxisTemp_[0][0],&rrr[0][0],&rrr_[0][0]);
+		if(1)
+		{	for (int i=0;i<3;i++)
+			for (int j=0;j<3;j++)
+			{	targetHandAxis_[i][j]=rrr_[i][j];
+			}
+		}
+	}
+
+
+
+    float wan1_angle=-atan2(wanXy,wanXz);//
+	hand1_angle=wan1_angle;
+
+	//腕俯仰1
+	float wan1_radius2 = norm2(wanXy ,  wanXz);
+    float wan1_inangle2=-atan2(wan1_radius2 ,wanXx  );
+	hand2_angle=wan1_inangle2;//PI*0.5;//
+	//	targetx+targetHandAxisTemp_[0][0];
+	//	targety+targetHandAxisTemp_[0][1];
+	//	targetz+targetHandAxisTemp_[0][2];
+	armadv_init(2);//mode==2 是简化初始化
+	Emu.moveLite(&armadv[6],0,hand2_angle,0);//腕2
+	Emu.moveLite(&armadv[5],0,hand1_angle,0);//腕1
+	Emu.moveLite(&armadv[4],0,zhou1_angle,0);//肘
+	Emu.moveLite(&armadv[3],0,jian3_angle,0);//肩3
+	Emu.moveLite(&armadv[2],0,jian2_angle,0);//肩2
+	Emu.moveLite(&armadv[1],0,jian1_angle,0);//肩1
+
+
+	if(0)
+	{	for (int i=0;i<3;i++)
+		for (int j=0;j<3;j++)
+		{	targetHandAxis_[i][j]=targetHandAxisTemp_[i][j];
+		}
+	}
+
+	jj=6;//腕俯仰过后的末端 坐标系  爪旋转根部坐标系
+	//旋转向量
+	AxisOrientation2floatMatrix3_3(&(armadv[jj].compAxis[3]),&rrr[0][0]);
+//	//平移向量
+//	AxisOffset2floatMatrix1_3(&armadv[jj].compAxis[3],&ttt[0]);
+
+	Matrix3X3(&targetHandAxisTemp[0][0],&rrr[0][0],&rrr_[0][0]);
+//	Matrix3X1_3X3(&targetHandAxisTemp[0][0],&rrr[0][0],&rrr_[0][0]);//旋转矩阵的逆 是其转置
+//	Matrix3X1_3X3(&targetHandAxisTemp[1][0],&rrr[0][0],&rrr_[1][0]);//旋转矩阵的逆 是其转置
+//	Matrix3X1_3X3(&targetHandAxisTemp[2][0],&rrr[0][0],&rrr_[2][0]);//旋转矩阵的逆 是其转置
+	for (y=0;y<3;y++)
+	{	for (x=0;x<3;x++)
+		{		targetHandAxisTemp_[y][x]=rrr_[y][x];
+		}
+	}
+
+	
+	//爪旋转
+	float wanYx=targetHandAxisTemp_[1][0];
+	float wanYy=targetHandAxisTemp_[1][1];
+	float wanYz=targetHandAxisTemp_[1][2];
+
+    float wan3_angle=-atan2(wanYy,wanYz);//
+	hand3_angle=wan3_angle;
+
+	finger1_angle=0;//
+	hand3_angle=0;
+	//hand2_angle=0;	hand1_angle=0;	zhou1_angle=0;	jian3_angle=0;	jian2_angle=0;	jian1_angle=0;
+	armadv_init(1);//mode==1 是完整初始化
+	Emu.move(&armadv[9],0,-finger1_angle,0);//指1
+	Emu.move(&armadv[8],0,finger1_angle,0);//指1
+	Emu.move(&armadv[7],0,hand3_angle,0);//腕3
+	Emu.move(&armadv[6],0,hand2_angle,0);//腕2
+	Emu.move(&armadv[5],0,hand1_angle,0);//腕1
+	Emu.move(&armadv[4],0,zhou1_angle,0);//肘
+	Emu.move(&armadv[3],0,jian3_angle,0);//肩3
+	Emu.move(&armadv[2],0,jian2_angle,0);//肩2
+	Emu.move(&armadv[1],0,jian1_angle,0);//肩1
+	Emu.move(&armadv[0],0,base_roateZ,0);//z
+	Emu.move(&armadv[0],1,base_roateY,0);//y
+	Emu.move(&armadv[0],2,base_roateX,0);//x
+
+
+
+
+	Emu.endMove(&armadv[0]);
+	Emu.endMove(&armadv[1]);
+	Emu.endMove(&armadv[2]);
+	Emu.endMove(&armadv[3]);
+	Emu.endMove(&armadv[4]);
+	Emu.endMove(&armadv[5]);
+	Emu.endMove(&armadv[6]);
+	Emu.endMove(&armadv[7]);
+	Emu.endMove(&armadv[8]);
+	Emu.endMove(&armadv[9]);
+
+	   printf("j1:%3.2f j2:%3.1f j3:%3.1f z1:%3.1f  h1:%3.1f h2:%3.1f h3:%3.1f f::%3.1f X:%3.1f Y:%3.1f Z:%3.1f\n",
+						jian1_angle,
+						jian2_angle,
+						jian3_angle,
+						zhou1_angle,
+						hand1_angle,
+						hand2_angle,
+						hand3_angle,
+						finger1_angle,
+						targetx,targety,targetz);  
+
+
+
+}

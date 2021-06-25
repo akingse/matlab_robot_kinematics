@@ -1,31 +1,20 @@
-clc;clear all;
-format short g;
-%% HP6
-% mdl_motomanHP6;
-%            theta      d      a      alpha
-% L(1) = Link([ 0       0      0.15   -pi/2   0]);
-% L(2) = Link([ 0       0      0.57    pi     0]);
-% L(3) = Link([ 0       0      0.155  -pi/2   0]);
-% L(4) = Link([ 0      -0.635  0       pi/2   0]);
-% L(5) = Link([ 0       0      0      -pi/2   0]);
-% L(6) = Link([ 0      -0.095  0       pi     0]);
-% q0 =[0   -pi/2   0   0   -pi/2   0];
-% HP6 = SerialLink(L, 'name', 'Motoman HP6');
-% HP6.display();
-% HP6.teach(q0); 
+%% initialize
+clc; close all; clear all;
+format shortg; format compact;
 %{
-% %            theta    d      a      alpha sigma offset
-% L(1) = Link([ 0      100     0       0      0     0]);
-% L(2) = Link([ 0       0     100      pi/2   0     0]);
-% L(3) = Link([ 0       0     500      0      0     0]);
-% L(4) = Link([ 0      600    100      pi/2   0     0]);
-% L(5) = Link([ 0       0      0      -pi/2   0     0]);
-% L(6) = Link([ 0       0      0       pi/2   0     0]);
-% q0 =[0   pi/2   0   0   0   0];
-% J = SerialLink(L, 'name', 'jungle');
-% J.display();
-% J.teach(q0); 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Readme
+这是另外一个经典六轴串联模型的求解过程；鼎鼎大名的安川GP系列；YASKAWA MOTOMAN GP7；
+GP7与UR5是两种常见的模型结构，各有特点；个人更喜欢UR的外形，是个颜粉；
+在perc实验室两种模型都是实体机器人，当时在选择的时候纠结了一下还是选择了UR5；
+一是网上的资料更多，且开源，二是坐标系比较分散，整体布局更加合理；
+cal是计算推导，sim是有用代码提取；
+这些计算也是早期的方法，后来深入研究之后进行了更全面精准的理论参数推导，
+但是时间有限，就没有把方法应用到此程序
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %}
+
 %% model
 theta=[0 0 0 0 0 0];
 % d1=100;d4=-440;d6=-80;  a1=40;a2=460;a3=40;
@@ -39,7 +28,7 @@ theta=[0 0 0 0 0 0];
 % L4 = Link([theta(4) d(4) a(4) alpha(4) sigma offset(4)],mdh);
 % L5 = Link([theta(5) d(5) a(5) alpha(5) sigma offset(5)],mdh);
 % L6 = Link([theta(6) d(6) a(6) alpha(6) sigma offset(6)],mdh);
-%% 全新精简建模，GP7；
+% 全新精简建模，GP7；
 % d1=100;d4=400;d6=80;  a2=-500;
 % d=[d1 0 0 d4 0 d6]; a=[0 a2 0 0 0 0];
 alpha=[pi/2 0 pi/2 -pi/2 pi/2 0]; 
@@ -71,7 +60,7 @@ Tq=[nx ox ax px;ny oy ay py;nz oz az pz;0 0 0 1];
 T1i=DH_inverse(th1,d1,0,pi/2); 
 T6i=DH_inverse(th6,d6,0,0);
 Ti=T1i*Tq*T6i;
-%% GP7
+%% GP7 noap
 % nx=-sin(th6)*(cos(th4)*sin(th1)+sin(th4)*(cos(th1)*sin(th2)*sin(th3)+cos(th1)*cos(th2)*cos(th3)))-cos(th6)*(cos(th5)*(sin(th1)*sin(th4)-cos(th4)*(cos(th1)*sin(th2)*sin(th3)+cos(th1)*cos(th2)*cos(th3)))+sin(th5)*(cos(th1)*cos(th2)*sin(th3)-cos(th1)*cos(th3)*sin(th2)));
 % ny=sin(th6)*(cos(th1)*cos(th4)-sin(th4)*(sin(th1)*sin(th2)*sin(th3)+cos(th2)*cos(th3)*sin(th1)))+cos(th6)*(cos(th5)*(cos(th1)*sin(th4)+cos(th4)*(sin(th1)*sin(th2)*sin(th3)+cos(th2)*cos(th3)*sin(th1)))-sin(th5)*(cos(th2)*sin(th1)*sin(th3)-cos(th3)*sin(th1)*sin(th2)));
 % nz=cos(th6)*(cos(th2-th3)*sin(th5)-sin(th2-th3)*cos(th4)*cos(th5))+sin(th2-th3)*sin(th4)*sin(th6);
@@ -141,8 +130,9 @@ L6 = Link([0   0   0     0     0    0]);
 % q1=[0 -pi/2 0 0 -pi/2 0];
 q0=[0 0 0 0 0 0];
 robot_GP7=SerialLink([L1,L2,L3,L4,L5,L6],'name','GP7'); 
-robot_GP7.display();
-robot_GP7.teach(q0);
+% robot_GP7.display();
+% robot_GP7.teach(q0);
+
 % +---+-----------+-----------+-----------+-----------+-----------+
 % | j |     theta |         d |         a |     alpha |    offset |
 % +---+-----------+-----------+-----------+-----------+-----------+
